@@ -26,6 +26,8 @@ strategy-library.json
 decision-log.json
 hivemind-cache.json
 signal-weights.json
+latest-candidates.json
+latest-candidates.json.tmp
 
 # Logs
 logs/

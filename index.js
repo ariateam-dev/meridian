@@ -2,6 +2,7 @@ import "./envcrypt.js";
 import cron from "node-cron";
 import readline from "readline";
 import path from "path";
+import fs from "node:fs";
 import { fileURLToPath } from "url";
 import { agentLoop } from "./agent.js";
 import { log } from "./logger.js";
@@ -958,6 +959,38 @@ let _latestCandidatesAt = null;
 function setLatestCandidates(candidates = []) {
   _latestCandidates = Array.isArray(candidates) ? candidates : [];
   _latestCandidatesAt = new Date().toISOString();
+
+  const snapshot = {
+    updatedAt: _latestCandidatesAt,
+    count: _latestCandidates.length,
+    candidates: _latestCandidates,
+  };
+
+  const snapshotPath = repoPath("latest-candidates.json");
+  const tempPath = repoPath("latest-candidates.json.tmp");
+
+  try {
+    fs.writeFileSync(
+      tempPath,
+      `${JSON.stringify(snapshot, null, 2)}\n`,
+      "utf8"
+    );
+
+    fs.renameSync(tempPath, snapshotPath);
+  } catch (error) {
+    try {
+      if (fs.existsSync(tempPath)) {
+        fs.unlinkSync(tempPath);
+      }
+    } catch {
+      // Ignore cleanup failure.
+    }
+
+    log(
+      "screening_warn",
+      `Failed to persist candidate snapshot: ${error.message}`
+    );
+  }
 }
 
 function getLatestCandidatesMeta() {
